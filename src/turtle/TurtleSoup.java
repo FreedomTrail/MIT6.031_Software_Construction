@@ -15,12 +15,14 @@ public class TurtleSoup {
      * @param sideLength length of each side
      */
     public static void drawSquare(Turtle turtle, int sideLength) {
-        for (int x = 0; x < 4; x++){
+    	// avoid magic number, declare variabls as final since they are constant
+    	final int squareSideNumber = 4;
+    	final int squareAngle = 90;
+    	
+        for (int x = 0; x < squareSideNumber; x++) {
             turtle.forward(sideLength);
-            turtle.turn(90);
-            
+            turtle.turn(squareAngle);
         }
-        
     }
 
     /**
@@ -33,14 +35,22 @@ public class TurtleSoup {
      * @return angle in degrees, where 0 <= angle < 360
      */
     public static double calculateRegularPolygonAngle(int sides) {
-        /*need to write try statement in future*/
-        if(sides < 3){
-            System.out.print("sides must >= 3,return 0 for no result");
-            return 0;
-        }else{
-            return (double) (sides - 2) * 180 / sides;
-            /* why return (double) ((sides - 2) * 180 / sides); failed but upper worked? */
-        }
+    	// since preconditions in specification indicate that sides must be > 2, we don't need to
+    	// check this condition explicitly, or we can throw new unchecked exception and declare them
+    	// inside specification as @throws ....
+    	// you can refer to here for more information: 
+    	// http://web.mit.edu/6.031/www/sp18/classes/06-specifications/#@unchecked_exceptions_signal
+    	
+    	final int regularPolygonAngleTotal = (sides - 2) * 180;
+    	final double regularPolygonAngle = (double) regularPolygonAngleTotal / sides;
+    	return regularPolygonAngle;
+        //return (double) (sides - 2) * 180 / sides;
+        /* why return (double) ((sides - 2) * 180 / sides); failed but upper worked? */
+        // source: http://bmanolov.free.fr/javaoperators.php
+        // reason: since casting operator takes in bigger priority than +,-,*,/, but () takes the
+        // biggest priority, thus the failed version of code would first make results in integer format.
+        // while the right version would do double casting to (sides - 2) first, then make whole result to
+        // be double type.
     }
 
     /**
@@ -54,12 +64,8 @@ public class TurtleSoup {
      * @return the integer number of sides
      */
     public static int calculatePolygonSidesFromAngle(double angle) {
-        if(angle < 60){
-            System.out.print("angle must >= 60,ortherwise side small than 3!,return 0 for no result");
-            return 0;
-        }else{
-            return (int) Math.round(360 / (180 - angle)) ;
-        }
+    	// if checking is ommitted, and the reason is the same as the above one
+        return (int) Math.round(360 / (180 - angle));
     }
     /**
      * Given the number of sides, draw a regular polygon.
@@ -71,16 +77,13 @@ public class TurtleSoup {
      * @param sideLength length of each side
      */
     public static void drawRegularPolygon(Turtle turtle, int sides, int sideLength) {
-        if(sides < 3){
-            System.out.print("sides must >= 3,return 0 for no result");
-        }else{
-            double angle = 180 - calculateRegularPolygonAngle(sides);
-            /*outside angle to draw right-hand turns*/
-            for (int x = 0; x < sides; x++){
-                turtle.forward(sideLength);
-                turtle.turn(angle);
-                
-            }
+    	// if checking is ommitted, and the reason is the same as the above one
+    	
+        final double angle = 180 - calculateRegularPolygonAngle(sides);
+        /*outside angle to draw right-hand turns*/
+        for (int x = 0; x < sides; x++) {
+            turtle.forward(sideLength);
+            turtle.turn(angle);
         }
     }
 
@@ -105,13 +108,14 @@ public class TurtleSoup {
      */
     public static double calculateHeadingToPoint(double currentHeading, int currentX, int currentY,
                                                  int targetX, int targetY) {
-        int dX = targetX - currentX;
-        int dY = targetY - currentY;
-        double theta = 90 - Math.atan2(dY, dX) * 180 / Math.PI -currentHeading;
-        if (theta < 0 ){
-            return theta +360 ;
-        }else{
-            return theta ;
+        final int dX = targetX - currentX;
+        final int dY = targetY - currentY;
+        final double theta = 90 - Math.atan2(dY, dX) * 180 / Math.PI - currentHeading;
+        
+        if (theta < 0) {
+            return theta + 360;
+        } else{
+            return theta;
         }
     }
 
@@ -130,26 +134,24 @@ public class TurtleSoup {
      *         otherwise of size (# of points) - 1
      */
     public static List<Double> calculateHeadings(List<Integer> xCoords, List<Integer> yCoords) {
-        List<Double> heading_adjustment = new ArrayList<>();
-        int point_seq_size = xCoords.size();
+        List<Double> headingAdjustment = new ArrayList<>();
+        int pointSeqSize = xCoords.size();
         double currentHeading;//Don't know why I need to double first,not in for loop
-        if (point_seq_size >= 2){//make sure list is more than 2 point
-            for ( int x = 1; x < point_seq_size; x++){
-                if (x == 1) {
-                    currentHeading = 0;//set initial heading angle as 0
-                }else{
-                    currentHeading = calculateHeadingToPoint(0, xCoords.get(x-2), yCoords.get(x-2),
-                            xCoords.get(x-1), yCoords.get(x-1));//calculate previous heading angle
-                }
-                heading_adjustment.add(calculateHeadingToPoint(currentHeading, xCoords.get(x-1), yCoords.get(x-1),
-                            xCoords.get(x), yCoords.get(x)));//calculate adjusted heading angle
+        
+        for (int x = 1; x < pointSeqSize; x++) {
+        	// is this if statement necessary?
+            if (x == 1) {
+                currentHeading = 0;//set initial heading angle as 0
+            } else {
+                currentHeading = calculateHeadingToPoint(0, xCoords.get(x-2), yCoords.get(x-2),
+                        xCoords.get(x-1), yCoords.get(x-1));//calculate previous heading angle
             }
-        }else{
-            System.out.print("sides must >= 2,return empty list for no result");
+            
+            headingAdjustment.add(calculateHeadingToPoint(currentHeading, xCoords.get(x-1), yCoords.get(x-1),
+                        xCoords.get(x), yCoords.get(x)));//calculate adjusted heading angle
         }
         
-        return heading_adjustment;
-        
+        return headingAdjustment;
     }
 
     /**
@@ -159,18 +161,18 @@ public class TurtleSoup {
      * function, draw something interesting; the complexity can be as little or as much as you want.
      * 
      * @param turtle the turtle context
+     * @param sides number of sides, where sides must be > 2
+     * @param sideLength length of each side, where each should be > 0
      */
-    public static void drawPersonalArt(Turtle turtle,int sides,int side_length) {
-        /*Draw a polygon star by givin sides and side_length*/
+    public static void drawPersonalArt(Turtle turtle,int sides,int sideLength) {        
+    	// variables should be written in camel case
+        final double polygonAngle = calculateRegularPolygonAngle(sides);
+        final double turnAngle = 2 * (180 - polygonAngle);
         
-        double polygon_angle = calculateRegularPolygonAngle(sides);
-        double turn_angle= 2* (180 - polygon_angle);
-        for (int x = 0; x < sides; x++){
-            turtle.forward(side_length);
-            turtle.turn(turn_angle);
+        for (int x = 0; x < sides; x++) {
+            turtle.forward(sideLength);
+            turtle.turn(turnAngle);
         }
-                
-        
     }
 
     /**
@@ -184,7 +186,7 @@ public class TurtleSoup {
         DrawableTurtle turtle = new DrawableTurtle();
 
         //drawSquare(turtle, 40);
-        drawPersonalArt(turtle,8, 40);
+        drawPersonalArt(turtle, 8, 40);
 
         // draw the window
         turtle.draw();
