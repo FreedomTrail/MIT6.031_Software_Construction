@@ -38,7 +38,8 @@ public class TurtleSoup {
             System.out.print("sides must >= 3,return 0 for no result");
             return 0;
         }else{
-            return (double) ((sides - 2) * 180 / sides);
+            return (double) (sides - 2) * 180 / sides;
+            /* why return (double) ((sides - 2) * 180 / sides); failed but upper worked? */
         }
     }
 
@@ -106,11 +107,11 @@ public class TurtleSoup {
                                                  int targetX, int targetY) {
         int dX = targetX - currentX;
         int dY = targetY - currentY;
-        double theta = Math.atan2(dY, dX);
+        double theta = 90 - Math.atan2(dY, dX) * 180 / Math.PI -currentHeading;
         if (theta < 0 ){
-            return theta - currentHeading;
+            return theta +360 ;
         }else{
-            return 180 - theta - currentHeading;
+            return theta ;
         }
     }
 
@@ -129,7 +130,26 @@ public class TurtleSoup {
      *         otherwise of size (# of points) - 1
      */
     public static List<Double> calculateHeadings(List<Integer> xCoords, List<Integer> yCoords) {
-        throw new RuntimeException("implement me!");
+        List<Double> heading_adjustment = new ArrayList<>();
+        int point_seq_size = xCoords.size();
+        double currentHeading;//Don't know why I need to double first,not in for loop
+        if (point_seq_size >= 2){//make sure list is more than 2 point
+            for ( int x = 1; x < point_seq_size; x++){
+                if (x == 1) {
+                    currentHeading = 0;//set initial heading angle as 0
+                }else{
+                    currentHeading = calculateHeadingToPoint(0, xCoords.get(x-2), yCoords.get(x-2),
+                            xCoords.get(x-1), yCoords.get(x-1));//calculate previous heading angle
+                }
+                heading_adjustment.add(calculateHeadingToPoint(currentHeading, xCoords.get(x-1), yCoords.get(x-1),
+                            xCoords.get(x), yCoords.get(x)));//calculate adjusted heading angle
+            }
+        }else{
+            System.out.print("sides must >= 2,return empty list for no result");
+        }
+        
+        return heading_adjustment;
+        
     }
 
     /**
@@ -163,7 +183,8 @@ public class TurtleSoup {
     public static void main(String args[]) {
         DrawableTurtle turtle = new DrawableTurtle();
 
-        drawSquare(turtle, 40);
+        //drawSquare(turtle, 40);
+        drawPersonalArt(turtle,8, 40);
 
         // draw the window
         turtle.draw();
